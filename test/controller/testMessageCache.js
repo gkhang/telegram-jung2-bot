@@ -1,10 +1,9 @@
 'use strict';
 
 const util = require('util');
-const assert = require('assert');
+require('chai').should();
 const MessageCache = require('../../controller/messageCache.js');
 const faker = require('faker');
-
 
 ///////////////////////////////////////////////////////////
 /// test set 1
@@ -77,7 +76,7 @@ describe('MessageCacheTest', function () {
           let uid = Math.floor(Math.abs(randn() * users.length)) % users.length; // has a bit bias
           let msg = genMsg(gid, uid, date++);
 
-          assert(cache.addMessage(msg));
+          cache.addMessage(msg).should.equal(true);
           if (userMsg.has(uid)) {
             userMsg.get(uid).push(msg);
           } else {
@@ -100,33 +99,29 @@ describe('MessageCacheTest', function () {
 
     describe('rankByGroup', function () {
 
-      it('test 1', function (done) {
+      it('can handle a simulated normal scenario', function (done) {
         this.timeout(5 * 1000);
         // for each group
         for (var gid = 0; gid < group.length; gid++) {
           // get rank
           var res = cache.rankByGroupTimestamp(gid, 0, 1e9);
           // check total
-          assert.equal(res.total, getTotal(gid));
+          res.total.should.equal(getTotal(gid));
           // compare generated data
           for (var i = 0; i < res.rank.length; i++) {
-            assert.equal(res.rank[i].user.id, getRankUid(gid, i));
+            (res.rank[i].user.id).should.equal(getRankUid(gid, i));
           }
         }
+        done();
+      });
+
+      it('can handle invalid message', function (done) {
+        cache.addMessage('').should.equal(false);
         done();
       });
 
     });
 
   });
-
-  describe('performance test', function () {
-
-    describe('rankByGroup', function () {
-
-    });
-
-  });
-
 
 });
