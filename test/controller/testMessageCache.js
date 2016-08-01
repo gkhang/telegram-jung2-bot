@@ -101,7 +101,7 @@ describe('MessageCacheTest', function () {
 
   describe('RankByGroup', function () {
 
-    it('can handle a simulated normal scenario', function (done) {
+    it('can retrrieve all records in a simulated normal scenario', function (done) {
       this.timeout(20 * 1000);
       // for each group
       for (var gid = 0; gid < group.length; gid++) {
@@ -113,6 +113,16 @@ describe('MessageCacheTest', function () {
         for (var i = 0; i < res.rank.length; i++) {
           (res.rank[i].user.id).should.equal(getRankUid(gid, i));
         }
+      }
+      done();
+    });
+
+    it('can retrieve partial records in a simulated normal scenario', function (done) {
+      this.timeout(20 * 1000);
+      // for each group
+      for (var gid = 0; gid < group.length; gid++) {
+        var result = cache.rankByGroupTimestamp(gid, 10000, 1e9);
+        result.rank.length.should.greaterThan(0);
       }
       done();
     });

@@ -4,7 +4,7 @@
 
 const _ = require('lodash');
 
-let bsearchMin = function (a, b, test) {
+const bsearchMin = function (a, b, test) {
   // b is true and valid
   while (b - a > 1) {
     var mid = Math.floor((a + b) / 2);
@@ -17,7 +17,7 @@ let bsearchMin = function (a, b, test) {
   return b;
 };
 
-let bsearchMax = function (a, b, test) {
+const bsearchMax = function (a, b, test) {
   // a is true and valid
   while (b - a > 1) {
     var mid = Math.floor((a + b) / 2);
@@ -140,15 +140,6 @@ class Group {
     return count;
   }
 
-  // patchUserDetails(userId, details) {
-  //   var u = this.getUser(userId);
-  //   for (let k in details) {
-  //     if (details.hasOwnProperty(k)) {
-  //       u.details[k] = details[k];
-  //     }
-  //   }
-  // }
-
   rank(startTime, endTime) {
     let rank = [];
     for (let user of this.users.values()) {
@@ -255,18 +246,6 @@ class MessageCache {
     }
   }
 
-  // patchGroupDetails(gid, details) {
-  //   var g = this.getGroup(gid);
-  //   if (typeof g === 'undefined') {
-  //     return;
-  //   }
-  //   for (let k in details) {
-  //     if (details.hasOwnProperty(k)) {
-  //       g.details[k] = details[k];
-  //     }
-  //   }
-  // }
-
   /**
    *
    * return rank considert number of message between startTime and endTime inclusively
@@ -297,11 +276,6 @@ class MessageCache {
     }
     return result;
   }
-
-  // rankByGroupDate(gid, startDate, endDate) {
-  //   let unixTime = (d) => Math.round(d.getTime() / 1000);
-  //   return this.rankByGroup(gid, unixTime(startDate), unixTime(endDate));
-  // }
 
   /**
    *
@@ -343,22 +317,3 @@ class MessageCache {
 
 /*jshint camelcase: true */
 module.exports = MessageCache;
-
-// var stubMsg = {
-//  chat: {
-//    id: 123,
-//    type: 'group',    //  “private”, “group”, “supergroup” or “channel”
-//    title: '',        // optional
-//    username: '',	    // Optional. Username, for private chats and channels if available
-//    first_name: '',   // Optional. First name of the other party in a private chat
-//    last_name: ''     // Optional. Last name of the other party in a private chat
-//  },
-//  from: {
-//    id: 123,             // integer
-//    username: 'stubUsername',
-//    first_name: 'stubFirstName',  // optional
-//    last_name: 'stubLastName'     // optional
-//  },
-//  date: 1462008157,
-//  text: 'hi'
-// };
