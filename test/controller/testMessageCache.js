@@ -47,89 +47,129 @@ function genMsg(groupId, userId, date) {
 
 describe('MessageCacheTest', function () {
 
-  describe('correctness test', function () {
+  var cache = new MessageCache();
+  var group = [];
 
-    var cache = new MessageCache();
-    var group = [];
+  var getTotal = function (gid) {
+    return group[gid].total;
+  };
 
-    var getTotal = function (gid) {
-      return group[gid].total;
-    };
+  var getRankUid = function (gid, i) {
+    var userMsg = group[gid];
+    return userMsg[i][0].from.id;
+  };
 
-    var getRankUid = function (gid, i) {
-      var userMsg = group[gid];
-      return userMsg[i][0].from.id;
-    };
+  before(function () {
 
-    before(function () {
-      this.timeout(10 * 1000);
+    this.timeout(60 * 1000);
 
-      let date = 0;
-      let nGroup = 10;
+    let date = 0;
+    // let nGroup = 130; // similar to real scenario
+    let nGroup = 10;
 
-      for (var gid = 0; gid < nGroup; gid++) {
-        let nMsg = Math.floor( Math.random() * 20000 ) + 1000 ;
-        // let nMsg = 10000;
-        let userMsg = new Map();
+    for (var gid = 0; gid < nGroup; gid++) {
+      // let nMsg = Math.floor(Math.random() * 10000) + 1000; // similar to real scenario
+      let nMsg = 5000;
+      let userMsg = new Map();
 
-        for (var k = 0; k < nMsg; k++) {
-          // select a user
-          let uid = Math.floor(Math.abs(randn() * users.length)) % users.length; // has a bit bias
-          let msg = genMsg(gid, uid, date++);
+      for (var k = 0; k < nMsg; k++) {
+        // select a user
+        let uid = Math.floor(Math.abs(randn() * users.length)) % users.length; // has a bit bias
+        let msg = genMsg(gid, uid, date++);
 
-          cache.addMessage(msg).should.equal(true);
-          if (userMsg.has(uid)) {
-            userMsg.get(uid).push(msg);
-          } else {
-            userMsg.set(uid, [msg]);
-          }
+        cache.addMessage(msg).should.equal(true);
+        if (userMsg.has(uid)) {
+          userMsg.get(uid).push(msg);
+        } else {
+          userMsg.set(uid, [msg]);
         }
+      }
 
-        var arr = [];
-        userMsg.forEach((v) => arr.push(v));
-        arr.sort(function (a, b) {
-          var t = b.length - a.length;
-          if (t !== 0) return t;
-          return b[b.length - 1].date - a[a.length - 1].date;
-        });
+      var arr = [];
+      userMsg.forEach((v) => arr.push(v));
+      arr.sort(function (a, b) {
+        var t = b.length - a.length;
+        if (t !== 0) return t;
+        return b[b.length - 1].date - a[a.length - 1].date;
+      });
 
-        arr.total = nMsg;
-        group.push(arr);
+      arr.total = nMsg;
+      group.push(arr);
+    }
+  });
+
+  describe('RankByGroup', function () {
+
+    it('can handle a simulated normal scenario', function (done) {
+      this.timeout(20 * 1000);
+      // for each group
+      for (var gid = 0; gid < group.length; gid++) {
+        // get rank
+        var res = cache.rankByGroupTimestamp(gid, 0, 1e9);
+        // check total
+        res.total.should.equal(getTotal(gid));
+        // compare generated data
+        for (var i = 0; i < res.rank.length; i++) {
+          (res.rank[i].user.id).should.equal(getRankUid(gid, i));
+        }
+      }
+      done();
+    });
+
+    it('can handle invalid message', function (done) {
+      cache.addMessage('').should.equal(false);
+      done();
+    });
+
+    it('can handle invalid startTime', function (done) {
+      try {
+        cache.rankByGroupTimestamp(0, '', 0);
+      } catch (err) {
+        err.message.should.match(/^start time must be a number/);
+      } finally {
+        done();
       }
     });
 
-    describe('rankByGroup', function () {
+    it('can handle invalid endTime', function (done) {
+      try {
+        cache.rankByGroupTimestamp(0, 0, '');
+      } catch (err) {
+        err.message.should.match(/^end time must be a number/);
+      } finally {
+        done();
+      }
+    });
 
-      it('can handle a simulated normal scenario', function (done) {
-        this.timeout(5 * 1000);
-        // for each group
-        for (var gid = 0; gid < group.length; gid++) {
-          // get rank
-          var res = cache.rankByGroupTimestamp(gid, 0, 1e9);
-          // check total
-          res.total.should.equal(getTotal(gid));
-          // compare generated data
-          for (var i = 0; i < res.rank.length; i++) {
-            (res.rank[i].user.id).should.equal(getRankUid(gid, i));
-          }
+    it('can sort all timestamps in ascending order', function (done) {
+      this.timeout(10 * 1000);
+      let users = cache.getGroup(0).users;
+      let user = null;
+      for (var key of users.keys()) {
+        user = users.get(key);
+        if (user.timestamps.length > 1) {
+          break;
         }
-        done();
+      }
+      // make it into descending order
+      user.timestamps.sort(function (a, b) {
+        return b - a;
       });
+      user.timestamps[0].should.be.greaterThan(user.timestamps[1]);
+      cache.sort();
+      // now is ascending
+      user.timestamps[0].should.be.lessThan(user.timestamps[1]);
+      done();
+    });
 
-      it('can handle invalid message', function (done) {
-        cache.addMessage('').should.equal(false);
-        done();
-      });
-
-      it('can clear outdated messages', function (done) {
-        var cacheCopy = _.cloneDeep(cache);
-        let totalNumberOfMessageBefore = cacheCopy.totalNumberOfMessage();
-        cacheCopy.clearTimestampBefore(10000);
-        let totalNumberOfMessageAfter = cacheCopy.totalNumberOfMessage();
-        totalNumberOfMessageAfter.should.be.lessThan(totalNumberOfMessageBefore);
-        done();
-      });
-
+    it('can clear outdated messages', function (done) {
+      this.timeout(20 * 1000);
+      var cacheCopy = _.cloneDeep(cache);
+      let totalNumberOfMessageBefore = cacheCopy.totalNumberOfMessage();
+      cacheCopy.clearTimestampBefore(10000);
+      let totalNumberOfMessageAfter = cacheCopy.totalNumberOfMessage();
+      totalNumberOfMessageAfter.should.be.lessThan(totalNumberOfMessageBefore);
+      done();
     });
 
   });
