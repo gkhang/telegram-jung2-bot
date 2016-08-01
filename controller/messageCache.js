@@ -40,11 +40,11 @@ class User {
 
   lastTimestamp() {
     let l = this.timestamps.length;
-    var result = null;
     if (l !== 0) {
-      result = this.timestamps[l - 1];
+      return this.timestamps[l - 1];
+    } else {
+      return null;
     }
-    return result;
   }
 
   addTimestamp(t) {
@@ -127,7 +127,7 @@ class Group {
 
   replaceUserDetails(uid, details) {
     var user = this.getUser(uid);
-    if (typeof user !== 'undefined') {
+    if (user) {
       user.details = details;
     }
   }
@@ -241,7 +241,7 @@ class MessageCache {
 
   replaceGroupDetails(gid, details) {
     var group = this.getGroup(gid);
-    if (typeof group !== 'undefined') {
+    if (group) {
       group.details = details;
     }
   }
@@ -257,7 +257,6 @@ class MessageCache {
    */
   rankByGroupTimestamp(gid, startTime, endTime) {
     let group = this.getGroup(gid);
-    var result = {};
 
     if (typeof startTime !== 'number' || isNaN(startTime)) {
       throw new Error('start time must be a number ' + startTime);
@@ -266,15 +265,16 @@ class MessageCache {
       throw new Error('end time must be a number ' + endTime);
     }
 
-    if (typeof group !== 'undefined') {
+    if (group) {
       let groupRank = group.rank(startTime, endTime);
-      result = {
+      return {
         group: group.details,
         total: groupRank.total,
         rank: groupRank.rank
       };
+    } else {
+      return {};
     }
-    return result;
   }
 
   /**

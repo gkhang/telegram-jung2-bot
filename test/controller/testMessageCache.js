@@ -185,57 +185,81 @@ describe('MessageCacheTest', function () {
 
     it('can display name', function (done) {
       this.timeout(20 * 1000);
-      let stubMsgOne = {
-        chat: {
-          id: 123,
-          type: 'group'
-        },
-        from: {
-          id: 1,
-          username: 'stubUsername',
-          first_name: 'stubFirstName',
-          last_name: 'stubLastName'
-        },
+      let stubMsgs = [{
+        chat: {id: 123, type: 'group'},
+        from: {id: 1, username: 'stubUsername', first_name: 'stubFirstName', last_name: 'stubLastName'},
         date: 1000,
         text: 'hi'
-      };
-
-      var stubMsgTwo = _.cloneDeep(stubMsgOne);
-      stubMsgTwo.from.id = 2;
-      delete stubMsgTwo.from.last_name;
-      stubMsgTwo.date = 1005;
-
-      var stubMsgThree = _.cloneDeep(stubMsgOne);
-      stubMsgThree.from.id = 3;
-      delete stubMsgThree.from.first_name;
-      stubMsgThree.date = 1010;
-
-      var stubMsgFour = _.cloneDeep(stubMsgOne);
-      stubMsgFour.from.id = 4;
-      delete stubMsgFour.from.first_name;
-      delete stubMsgFour.from.last_name;
-      stubMsgFour.date = 1050;
-
-      var stubMsgFive = _.cloneDeep(stubMsgOne);
-      stubMsgFive.from.id = 5;
-      delete stubMsgFive.from.first_name;
-      delete stubMsgFive.from.last_name;
-      delete stubMsgFive.from.username;
-      stubMsgFive.date = 1100;
-
+      }, {
+        chat: {id: 123, type: 'group'},
+        from: {id: 2, username: 'stubUsername', first_name: 'stubFirstName', last_name: ''},
+        date: 1001,
+        text: 'hi'
+      }, {
+        chat: {id: 123, type: 'group'},
+        from: {id: 3, username: 'stubUsername', first_name: '', last_name: 'stubLastName'},
+        date: 1002,
+        text: 'hi'
+      }, {
+        chat: {id: 123, type: 'group'},
+        from: {id: 4, username: 'stubUsername', first_name: '', last_name: ''},
+        date: 1003,
+        text: 'hi'
+      }, {
+        chat: {id: 123, type: 'group'},
+        from: {id: 5, username: '', first_name: '', last_name: ''},
+        date: 1004,
+        text: 'hi'
+      }];
       let nameCache = new MessageCache();
-      nameCache.addMessage(stubMsgOne);
-      nameCache.addMessage(stubMsgTwo);
-      nameCache.addMessage(stubMsgThree);
-      nameCache.addMessage(stubMsgFour);
-      nameCache.addMessage(stubMsgFive);
-
+      for (let msg of stubMsgs) {
+        nameCache.addMessage(msg);
+      }
       nameCache.getGroup(123).getUser(1).name().should.equal('stubFirstName stubLastName');
       nameCache.getGroup(123).getUser(2).name().should.equal('stubFirstName');
       nameCache.getGroup(123).getUser(3).name().should.equal('stubLastName');
       nameCache.getGroup(123).getUser(4).name().should.equal('stubUsername');
       nameCache.getGroup(123).getUser(5).name().should.equal('');
+      done();
+    });
 
+    it('can handle empty timestamps', function (done) {
+      let emptyTimestampsCache = new MessageCache();
+      emptyTimestampsCache.addMessage({
+        chat: {id: 123, type: 'group'},
+        from: {id: 1, username: 'stubUsername', first_name: 'stubFirstName', last_name: 'stubLastName'},
+        date: 1000,
+        text: 'hi'
+      });
+      let user = emptyTimestampsCache.getGroup(123).getUser(1);
+      user.timestamps = [];
+      _.isNull(user.lastTimestamp()).should.equal(true);
+      done();
+    });
+
+    it('can handle empty group', function (done) {
+      let emptyCache = new MessageCache();
+      let testReuslt = _.isEmpty(emptyCache.rankByGroupTimestamp(0, 0, 1e9)) &&
+        _.isObject(emptyCache.rankByGroupTimestamp(0, 0, 1e9));
+      testReuslt.should.equal(true);
+      done();
+    });
+
+    it('will not throw error if cannot find group when replacing', function (done) {
+      let emptyCache = new MessageCache();
+      emptyCache.replaceGroupDetails(-1, null);
+      done();
+    });
+
+    it('will not throw error if cannot find user when replacing', function (done) {
+      let emptyCache = new MessageCache();
+      emptyCache.addMessage({
+        chat: {id: 123, type: 'group'},
+        from: {id: 1, username: 'stubUsername', first_name: 'stubFirstName', last_name: 'stubLastName'},
+        date: 1000,
+        text: 'hi'
+      });
+      emptyCache.getGroup(123).replaceUserDetails(-1);
       done();
     });
 
