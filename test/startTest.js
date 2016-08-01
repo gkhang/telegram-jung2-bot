@@ -14,3 +14,4 @@ require('./model/testUsage');
 require('./controller/testMongoMessage');
 require('./controller/testUsage');
 require('./controller/testMessageFacade');
+require('./controller/testMessageCache');
