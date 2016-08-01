@@ -2,6 +2,8 @@
 
 /*jshint camelcase: false */
 
+const _ = require('lodash');
+
 let bsearchMin = function (a, b, test) {
   // b is true and valid
   while (b - a > 1) {
@@ -73,13 +75,13 @@ class User {
   name() {
     let detail = this.details;
     let result = '';
-    if (detail.first_name && detail.last_name) {
+    if (!_.isEmpty(detail.first_name) && !_.isEmpty(detail.last_name)) {
       result = detail.first_name + ' ' + detail.last_name;
-    } else if (detail.first_name) {
+    } else if (!_.isEmpty(detail.first_name)) {
       result = detail.first_name;
-    } else if (detail.last_name) {
+    } else if (!_.isEmpty(detail.last_name)) {
       result = detail.last_name;
-    } else if (detail.username) {
+    } else if (!_.isEmpty(detail.username)) {
       result = detail.username;
     }
     return result;

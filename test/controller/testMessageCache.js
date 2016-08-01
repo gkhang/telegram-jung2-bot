@@ -75,7 +75,8 @@ describe('MessageCacheTest', function () {
       for (var k = 0; k < nMsg; k++) {
         // select a user
         let uid = Math.floor(Math.abs(randn() * users.length)) % users.length; // has a bit bias
-        let msg = genMsg(gid, uid, date++);
+        date += k;
+        let msg = genMsg(gid, uid, date);
 
         cache.addMessage(msg).should.equal(true);
         if (userMsg.has(uid)) {
@@ -169,6 +170,62 @@ describe('MessageCacheTest', function () {
       cacheCopy.clearTimestampBefore(10000);
       let totalNumberOfMessageAfter = cacheCopy.totalNumberOfMessage();
       totalNumberOfMessageAfter.should.be.lessThan(totalNumberOfMessageBefore);
+      done();
+    });
+
+    it('can display name', function (done) {
+      this.timeout(20 * 1000);
+      let stubMsgOne = {
+        chat: {
+          id: 123,
+          type: 'group'
+        },
+        from: {
+          id: 1,
+          username: 'stubUsername',
+          first_name: 'stubFirstName',
+          last_name: 'stubLastName'
+        },
+        date: 1000,
+        text: 'hi'
+      };
+
+      var stubMsgTwo = _.cloneDeep(stubMsgOne);
+      stubMsgTwo.from.id = 2;
+      delete stubMsgTwo.from.last_name;
+      stubMsgTwo.date = 1005;
+
+      var stubMsgThree = _.cloneDeep(stubMsgOne);
+      stubMsgThree.from.id = 3;
+      delete stubMsgThree.from.first_name;
+      stubMsgThree.date = 1010;
+
+      var stubMsgFour = _.cloneDeep(stubMsgOne);
+      stubMsgFour.from.id = 4;
+      delete stubMsgFour.from.first_name;
+      delete stubMsgFour.from.last_name;
+      stubMsgFour.date = 1050;
+
+      var stubMsgFive = _.cloneDeep(stubMsgOne);
+      stubMsgFive.from.id = 5;
+      delete stubMsgFive.from.first_name;
+      delete stubMsgFive.from.last_name;
+      delete stubMsgFive.from.username;
+      stubMsgFive.date = 1100;
+
+      let nameCache = new MessageCache();
+      nameCache.addMessage(stubMsgOne);
+      nameCache.addMessage(stubMsgTwo);
+      nameCache.addMessage(stubMsgThree);
+      nameCache.addMessage(stubMsgFour);
+      nameCache.addMessage(stubMsgFive);
+
+      nameCache.getGroup(123).getUser(1).name().should.equal('stubFirstName stubLastName');
+      nameCache.getGroup(123).getUser(2).name().should.equal('stubFirstName');
+      nameCache.getGroup(123).getUser(3).name().should.equal('stubLastName');
+      nameCache.getGroup(123).getUser(4).name().should.equal('stubUsername');
+      nameCache.getGroup(123).getUser(5).name().should.equal('');
+
       done();
     });
 
