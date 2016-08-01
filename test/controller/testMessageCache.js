@@ -4,6 +4,7 @@ const util = require('util');
 require('chai').should();
 const MessageCache = require('../../controller/messageCache.js');
 const faker = require('faker');
+var _ = require('lodash');
 
 ///////////////////////////////////////////////////////////
 /// test set 1
@@ -117,6 +118,15 @@ describe('MessageCacheTest', function () {
 
       it('can handle invalid message', function (done) {
         cache.addMessage('').should.equal(false);
+        done();
+      });
+
+      it('can clear outdated messages', function (done) {
+        var cacheCopy = _.cloneDeep(cache);
+        let totalNumberOfMessageBefore = cacheCopy.totalNumberOfMessage();
+        cacheCopy.clearTimestampBefore(10000);
+        let totalNumberOfMessageAfter = cacheCopy.totalNumberOfMessage();
+        totalNumberOfMessageAfter.should.be.lessThan(totalNumberOfMessageBefore);
         done();
       });
 

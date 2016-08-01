@@ -50,6 +50,10 @@ class User {
     this.timestamps.push(t);
   }
 
+  totalNumberOfMessage() {
+    return this.timestamps.length;
+  }
+
   numMsgBetween(start, end) {
     let ts = this.timestamps;
     let len = ts.length;
@@ -67,16 +71,16 @@ class User {
   }
 
   name() {
-    let d = this.details;
+    let detail = this.details;
     let result = '';
-    if (d.first_name && d.last_name) {
-      result = d.first_name + ' ' + d.last_name;
-    } else if (d.first_name) {
-      result = d.first_name;
-    } else if (d.last_name) {
-      result = d.last_name;
-    } else if (d.username) {
-      result = d.username;
+    if (detail.first_name && detail.last_name) {
+      result = detail.first_name + ' ' + detail.last_name;
+    } else if (detail.first_name) {
+      result = detail.first_name;
+    } else if (detail.last_name) {
+      result = detail.last_name;
+    } else if (detail.username) {
+      result = detail.username;
     }
     return result;
   }
@@ -92,7 +96,6 @@ class User {
       let ix = bsearchMax(0, len, function (i) {
         return ts[i] < time;
       });
-
       // todo: not sure whether V8 would actually free memory
       this.timestamps.splice(0, ix + 1);
     }
@@ -121,10 +124,18 @@ class Group {
   }
 
   replaceUserDetails(uid, details) {
-    var u = this.getUser(uid);
-    if (typeof u !== 'undefined') {
-      u.details = details;
+    var user = this.getUser(uid);
+    if (typeof user !== 'undefined') {
+      user.details = details;
     }
+  }
+
+  totalNumberOfMessage() {
+    var count = 0;
+    for (let user of this.users.values()) {
+      count += user.totalNumberOfMessage();
+    }
+    return count;
   }
 
   // patchUserDetails(userId, details) {
@@ -138,11 +149,11 @@ class Group {
 
   rank(startTime, endTime) {
     let rank = [];
-    for (let u of this.users.values()) {
+    for (let user of this.users.values()) {
       rank.push({
-        user: u.details,
-        numMsg: u.numMsgBetween(startTime, endTime),
-        lastTimestamp: u.lastTimestamp()
+        user: user.details,
+        numMsg: user.numMsgBetween(startTime, endTime),
+        lastTimestamp: user.lastTimestamp()
       });
     }
     rank.sort(function (a, b) {
@@ -165,14 +176,14 @@ class Group {
   }
 
   sort() {
-    for (let u of this.users.values()) {
-      u.sort();
+    for (let user of this.users.values()) {
+      user.sort();
     }
   }
 
   clearTimestampBefore(time) {
-    for (let u of this.users.values()) {
-      u.clearTimestampBefore(time);
+    for (let user of this.users.values()) {
+      user.clearTimestampBefore(time);
     }
   }
 
@@ -209,14 +220,14 @@ class MessageCache {
       this.setGroup(gid, msg.chat);
     }
     this.replaceGroupDetails(gid, msg.chat);
-    let g = this.getGroup(gid);
+    let group = this.getGroup(gid);
 
     // add user if not exist
-    if (!g.hasUser(uid)) {
-      g.setUser(uid, msg.from);
+    if (!group.hasUser(uid)) {
+      group.setUser(uid, msg.from);
     }
-    g.replaceUserDetails(uid, msg.from);
-    let u = g.getUser(uid);
+    group.replaceUserDetails(uid, msg.from);
+    let u = group.getUser(uid);
 
     u.addTimestamp(msg.date);
 
@@ -236,9 +247,9 @@ class MessageCache {
   }
 
   replaceGroupDetails(gid, details) {
-    var g = this.getGroup(gid);
-    if (typeof g !== 'undefined') {
-      g.details = details;
+    var group = this.getGroup(gid);
+    if (typeof group !== 'undefined') {
+      group.details = details;
     }
   }
 
@@ -264,7 +275,7 @@ class MessageCache {
    * @returns {*}
    */
   rankByGroupTimestamp(gid, startTime, endTime) {
-    let g = this.getGroup(gid);
+    let group = this.getGroup(gid);
     var result = {};
 
     if (typeof startTime !== 'number' || isNaN(startTime)) {
@@ -274,12 +285,12 @@ class MessageCache {
       throw new Error('end time must be a number ' + endTime);
     }
 
-    if (typeof g !== 'undefined') {
-      let gr = g.rank(startTime, endTime);
+    if (typeof group !== 'undefined') {
+      let groupRank = group.rank(startTime, endTime);
       result = {
-        group: g.details,
-        total: gr.total,
-        rank: gr.rank
+        group: group.details,
+        total: groupRank.total,
+        rank: groupRank.rank
       };
     }
     return result;
@@ -296,8 +307,8 @@ class MessageCache {
    *
    */
   sort() {
-    for (let g of this.groups.values()) {
-      g.sort();
+    for (let group of this.groups.values()) {
+      group.sort();
     }
   }
 
@@ -308,9 +319,23 @@ class MessageCache {
    * @param time
    */
   clearTimestampBefore(time) {
-    for (let g of this.groups.values()) {
-      g.clearTimestampBefore(time);
+    for (let group of this.groups.values()) {
+      group.clearTimestampBefore(time);
     }
+  }
+
+  /**
+   *
+   * total number of messages cached
+   *
+   * @param number
+   */
+  totalNumberOfMessage() {
+    var count = 0;
+    for (let group of this.groups.values()) {
+      count += group.totalNumberOfMessage();
+    }
+    return count;
   }
 }
 
