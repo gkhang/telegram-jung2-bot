@@ -10,7 +10,7 @@ const faker = require('faker');
 var connectionString = '127.0.0.1:27017/jung2botTest';
 mongoose.connect(connectionString, {db: {nativeParser: true}});
 
-// wrap MessageController.addMessage to promise
+// wrap MessageFacade.addMessage to promise
 function addMessage(msg) {
   return new Promise(function (resolve, reject) {
     MessageController.addMessage(msg, resolve);

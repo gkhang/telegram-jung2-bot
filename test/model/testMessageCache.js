@@ -2,7 +2,7 @@
 
 const util = require('util');
 require('chai').should();
-const MessageCache = require('../../controller/messageCache.js');
+const MessageCache = require('../../model/messageCache.js');
 const faker = require('faker');
 var _ = require('lodash');
 

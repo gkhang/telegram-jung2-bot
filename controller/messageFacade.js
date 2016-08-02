@@ -3,7 +3,8 @@
 // This is just a message controller facade
 
 require('dotenv').load();
-var MessageController = require('./' + process.env.MESSAGE_CONTROLLER);
+const MessageController = require('./' + process.env.MESSAGE_CONTROLLER);
+const MessageCacheController = require('./../controller/messageCache');
 
 exports.init = function(skip) {
   if ( MessageController.init && !skip ) {
@@ -21,6 +22,6 @@ exports.addMessage = MessageController.addMessage;
 
 exports.getAllGroupIds = MessageController.getAllGroupIds;
 
-exports.getAllJung = MessageController.getAllJung;
+exports.getAllJung = MessageCacheController.getAllJung;
 
-exports.getTopTen = MessageController.getTopTen;
+exports.getTopTen = MessageCacheController.getTopTen;
