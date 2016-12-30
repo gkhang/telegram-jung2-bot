@@ -47,7 +47,21 @@ bot.on('message', function (msg) {
 });
 
 var debugFunction = function (msg) {
-  // TODO:
+  MessageController.getAllGroupIds().then(function (chatIds) {
+    async.each(chatIds, function (chatId) {
+      var msg = {
+        chat: {
+          id: chatId
+        }
+      };
+      log.i("chatId: " + JSON.stringify(msg));
+      MessageController.getTopTen(msg, true).then(function (message) {
+        if (!_.isEmpty(message)) {
+          log.i("message: \n\n" + message);
+        }
+      });
+    });
+  });
 };
 
 var offJob = new CronJob({
