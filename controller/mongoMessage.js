@@ -89,7 +89,9 @@ var getCountAndGetJung = function (msg, limit) {
 // TODO: refactoring required
 exports.init = function () {
   var connectionStringCache = '127.0.0.1:27017/jung2botCache';
-  if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
+  if (process.env.MONGODB_CACHE_URL) {
+    connectionStringCache = process.env.MONGODB_CACHE_URL;
+  } else if (process.env.OPENSHIFT_MONGODB_DB_PASSWORD) {
     connectionStringCache = process.env.OPENSHIFT_MONGODB_DB_USERNAME + ':' +
       process.env.OPENSHIFT_MONGODB_DB_PASSWORD + '@' +
       process.env.OPENSHIFT_MONGODB_DB_HOST + ':' +
