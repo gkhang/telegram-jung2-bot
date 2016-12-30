@@ -104,8 +104,12 @@ exports.init = function () {
     connectionStringPersistence = process.env.MONGODB_URL;
   }
 
-  cacheConnection = mongoose.createConnection(connectionStringCache);
-  persistenceConnection = mongoose.createConnection(connectionStringPersistence);
+  var options = {
+    server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } },
+    replset: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 } }
+  };
+  cacheConnection = mongoose.createConnection(connectionStringCache, options);
+  persistenceConnection = mongoose.createConnection(connectionStringPersistence, options);
   MessageCache = cacheConnection.model('Message', MessageClass.getSchema());
   MessagePersistence = persistenceConnection.model('Message', MessageClass.getSchema());
 };
